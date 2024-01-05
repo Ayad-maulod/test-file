@@ -1,0 +1,148 @@
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAY4tam8UPNhIERWFBZ2y7zQ0x25H7onyw&libraries=places&callback=initMap" async defer></script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha384-rzfyXkluPZL1a45COeM6eFfRSUEqRpl7QCg3OKDMhxUt2FKBqHmV5MLeXJi3ApBs" crossorigin="anonymous">
+</head>
+<body>
+    <center>
+        <h1>بەخێربێن بۆ دۆزەرەوە </h1>
+        <br>
+        <h4>نزیکترین نەخۆشخانە یان کۆمەلگای پزیشکی بدۆزەوە </h4>
+        <div id="map"></div>
+    </center>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+<style>
+    body{
+        background-color: rgb(136, 139, 159);
+    }
+    *{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0px;
+        padding: 0px;
+    }
+    #map {
+        width: 60%;
+        height: 450px;
+        border-radius: 20px;
+        margin: 20px;
+        overflow: auto;
+        resize: both;
+
+    }
+</style>
+</body>
+</html>
+
+
+<script>
+    function initMap() {
+        var mapOptions = {
+            zoom: 15,
+            disableDefaultUI: true,
+            //center:userLatLng,
+            
+        };
+
+        var map = new google.maps.Map(document.getElementById('map'), mapOptions);
+        var userMarker;
+
+        var watchId = navigator.geolocation.watchPosition(function (position) {
+            var userLatLng = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+
+            map.setCenter(userLatLng);  //the current position
+
+            if (userMarker) {
+                userMarker.setPosition(userLatLng);
+                updateMarkerIcon(position.coords.heading);
+            } else {
+                userMarker = new google.maps.Marker({
+                    position: userLatLng,
+                    map: map,
+                    title: 'Your Location',
+                    icon: {
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 5,  // Adjust the size as needed
+                        rotation: position.coords.heading  // Set initial rotation based on heading
+                    }                });
+
+                google.maps.event.addListener(userMarker, 'click', function () {
+                    alert('Your Location clicked!');
+                });
+
+                // Check if PlacesService is available before calling searchNearbyHospitals
+                if (google.maps.places) {
+                    searchNearbyHospitals(map, userLatLng);
+                } else {
+                    console.error('PlacesService is not available.');
+                }
+            }
+        }, function () {
+            alert('Error: The Geolocation service failed.');
+        });
+    }
+
+    function updateMarkerIcon(heading) {
+        // Update the rotation of the marker icon
+        userMarker.setIcon({
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 5,  // Adjust the size as needed
+            rotation: heading  // Update rotation based on heading
+        });
+    }
+
+    function searchNearbyHospitals(map, location) {
+        var request = {
+            location: location,
+            radius: 1000,
+            query: 'hospital emergency'
+        };
+
+        var service = new google.maps.places.PlacesService(map);
+
+        service.textSearch(request, function (results, status) {
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+                for (var i = 0; i < results.length; i++) {
+                    createHospitalMarker(map, results[i]);
+            }
+            } else {
+                console.error('Error in PlacesService request: ' + status);
+            }
+        });
+    }
+
+
+
+    function createHospitalMarker(map, place) {
+        var marker = new google.maps.Marker({
+            map: map,
+            position: place.geometry.location,
+            title: place.name,
+            icon: {
+                url: 'https://maps.gstatic.com/mapfiles/ms2/micons/hospitals.png',
+                scaledSize: new google.maps.Size(40, 40)  // Adjust the size as needed
+            }
+        });
+    
+        google.maps.event.addListener(marker, 'click', function () {
+            alert(place.name + ' clicked!');
+        });
+    }
+</script>
